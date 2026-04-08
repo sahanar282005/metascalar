@@ -57,7 +57,7 @@ class InferenceRequest(BaseModel):
     scenario: str = "api_crash"
 
 
-# ── Existing Routes (UNCHANGED) ───────────────────────────────────────────────
+# ── Existing Routes ──────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
@@ -145,14 +145,11 @@ def actions():
 
 
 # ─────────────────────────────────────────────────────────
-# ✅ HACKATHON REQUIRED ENDPOINTS (CRITICAL)
+# ✅ HACKATHON REQUIRED ENDPOINTS (FINAL)
 # ─────────────────────────────────────────────────────────
 
 @app.post("/openenv/reset")
 def openenv_reset():
-    """
-    MUST NOT accept body
-    """
     return {
         "status": "success",
         "message": "Environment reset successfully"
@@ -164,41 +161,6 @@ def openenv_validate():
     return {
         "status": "ok"
     }
-
-
-@app.post("/inference")
-def inference(req: InferenceRequest):
-    result = subprocess.getoutput(
-        f"python inference.py --scenario {req.scenario} --policy ai"
-    )
-
-    return {
-        "output": result
-    }
-# ===============================
-# ✅ REQUIRED FOR HACKATHON
-# ===============================
-
-from pydantic import BaseModel
-import subprocess
-
-@app.post("/openenv/reset")
-def openenv_reset():
-    return {
-        "status": "success",
-        "message": "Environment reset successfully"
-    }
-
-
-@app.get("/openenv/validate")
-def openenv_validate():
-    return {
-        "status": "ok"
-    }
-
-
-class InferenceRequest(BaseModel):
-    scenario: str = "api_crash"
 
 
 @app.post("/inference")
