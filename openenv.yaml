@@ -1,0 +1,201 @@
+name: devops-incident-response
+version: "1.0.0"
+description: >
+  An OpenEnv-compatible reinforcement learning environment that simulates
+  real-world DevOps incident scenarios. An AI agent must diagnose and resolve
+  infrastructure failures across three difficulty levels.
+
+author: DevOps RL Team
+license: MIT
+
+interface:
+  reset:
+    description: "Initialize or restart an episode. Returns first observation."
+    http:
+      method: POST
+      path: /reset
+      body:
+        scenario_id:
+          type: string
+          enum: [api_crash, db_overload, failed_deployment]
+          default: api_crash
+        seed:
+          type: integer
+          default: 42
+    returns: observation
+
+  step:
+    description: "Apply an action. Returns (observation, reward)."
+    http:
+      method: POST
+      path: /step
+      body:
+        action:
+          type: string
+          description: "Action command string"
+          example: "restart_service:api"
+    returns:
+      observation: observation
+      reward: reward
+
+  state:
+    description: "Get full environment state snapshot."
+    http:
+      method: GET
+      path: /state
+    returns: state_snapshot
+
+observation_space:
+  type: structured
+  schema:
+    type: object
+    additionalProperties: false
+    required:
+      - scenario_id
+      - step
+      - max_steps
+      - services
+      - metrics
+      - logs
+      - incident_resolved
+      - incident_description
+      - available_actions
+      - episode_done
+    properties:
+      scenario_id:
+        type: string
+      step:
+        type: integer
+        minimum: 0
+      max_steps:
+        type: integer
+        minimum: 1
+
+      services:
+        type: object
+        additionalProperties:
+          type: string
+          enum: [healthy, degraded, crashed, overloaded, deploying, failed, unknown]
+
+      metrics:
+        type: object
+        additionalProperties: false
+        properties:
+          cpu_usage:
+            type: number
+            minimum: 0
+            maximum: 100
+          memory_usage:
+            type: number
+            minimum: 0
+            maximum: 100
+          request_rate:
+            type: number
+          error_rate:
+            type: number
+            minimum: 0
+            maximum: 100
+          response_time_ms:
+            type: number
+          active_connections:
+            type: integer
+          db_query_time_ms:
+            type: number
+          deployment_version:
+            type: string
+          replicas_running:
+            type: integer
+          replicas_desired:
+            type: integer
+
+      logs:
+        type: array
+        items:
+          type: string
+
+      incident_resolved:
+        type: boolean
+
+      incident_description:
+        type: string
+
+      available_actions:
+        type: array
+        items:
+          type: string
+
+      episode_done:
+        type: boolean
+
+action_space:
+  type: string
+  enum:
+    - restart_service:api
+    - restart_service:db
+    - restart_service:worker
+    - scale_service:db
+    - scale_service:api
+    - rollback_deployment
+    - check_logs
+    - do_nothing
+
+reward:
+  type: shaped
+  components:
+    correct_action:
+      value: 1.0
+    partial_progress:
+      value: 0.3
+    wrong_action:
+      value: -0.2
+    step_penalty:
+      value: -0.05
+    success_bonus:
+      value: 1.0
+  range:
+    min: -3.0
+    max: 3.2
+
+scenarios:
+  api_crash:
+    difficulty: easy
+    max_steps: 8
+    description: "API service has crashed (OOM kill)."
+    optimal_solution:
+      - check_logs
+      - restart_service:api
+    max_achievable_reward: 2.2
+
+  db_overload:
+    difficulty: medium
+    max_steps: 10
+    description: "Database overloaded with connections."
+    optimal_solution:
+      - check_logs
+      - scale_service:db
+    max_achievable_reward: 2.2
+
+  failed_deployment:
+    difficulty: hard
+    max_steps: 12
+    description: "Bad deployment causing cascading failures."
+    optimal_solution:
+      - check_logs
+      - rollback_deployment
+      - restart_service:api
+    max_achievable_reward: 3.15
+
+determinism:
+  guaranteed: true
+  seed_field: seed
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  framework: FastAPI
+
+docker:
+  image: devops-incident-env:1.0.0
+  base: python:3.11-slim
+  port: 8000
+  command: uvicorn app.main:app --host 0.0.0.0 --port 8000

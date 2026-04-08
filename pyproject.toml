@@ -1,0 +1,17 @@
+[project]
+name = "incident-agent"
+version = "0.1.0"
+description = "DevOps Incident Response AI Agent using Hugging Face"
+authors = [{ name = "Your Name" }]
+dependencies = [
+    "requests",
+    "pydantic",
+    "openenv-core",
+    "fastapi"
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.openenv]
+entry_point = "inference:main"
