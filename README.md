@@ -2,6 +2,27 @@
 
 An **OpenEnv-compatible reinforcement learning environment** that simulates real-world DevOps failures. An AI agent must diagnose and resolve infrastructure incidents across three difficulty levels.
 
+## About This Project
+
+This project provides a comprehensive simulation environment for training and evaluating autonomous DevOps agents. It models realistic infrastructure scenarios where agents must perform diagnostic and remedial actions to resolve system incidents. The environment is fully HTTP-accessible via FastAPI and follows the OpenEnv specification for RL environment standardization.
+
+### Key Features
+- **Three Difficulty Levels**: Progressive complexity from simple API crashes to cascading deployment failures
+- **OpenEnv Compliant**: Standard RL environment interface compatible with multiple agent frameworks
+- **LLM Integration**: Built-in support for AI-powered agents via Hugging Face/OpenAI-compatible APIs
+- **Docker Ready**: Production-ready containerization for easy deployment
+- **Detailed Observation Space**: Services, metrics, logs, and incident descriptions for informed decision-making
+
+## Technology Stack
+
+- **Backend Framework**: [FastAPI](https://fastapi.tiangolo.com/) 0.111+ - Modern async Python web framework
+- **Data Validation**: [Pydantic](https://docs.pydantic.dev/) 2.7+ - Type-safe data models
+- **API Server**: [Uvicorn](https://www.uvicorn.org/) 0.29+ - ASGI application server
+- **LLM Integration**: [OpenAI Python Client](https://github.com/openai/openai-python) - Compatible with Hugging Face APIs
+- **Environment Spec**: [OpenEnv Core](https://github.com/openenv-foundation/core) - Standardized RL environment interface
+- **Runtime**: Python 3.11+
+- **Containerization**: Docker multi-stage builds
+
 ---
 
 ## Quick Start
@@ -30,6 +51,38 @@ python inference.py --all-scenarios --policy optimal
 
 # Random agent on the hard scenario
 python inference.py --scenario failed_deployment --policy random --seed 99
+```
+
+---
+
+## Environment Variables
+
+The project supports the following environment variables, particularly for LLM-based agent integration:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `API_BASE_URL` | No | `https://api-inference.huggingface.co/v1` | Base URL for Hugging Face or OpenAI-compatible API |
+| `HF_TOKEN` | No | `` | Hugging Face API authentication token |
+| `MODEL_NAME` | No | `` | LLM model identifier (e.g., `meta-llama/Llama-2-7b-hf`) |
+| `PYTHONPATH` | No | `/app` | Python module search path (Docker: pre-configured) |
+| `PYTHONUNBUFFERED` | No | `1` | Ensures unbuffered logging output |
+
+### Example Configuration
+
+For local development with Hugging Face models:
+```bash
+export API_BASE_URL="https://api-inference.huggingface.co/v1"
+export HF_TOKEN="hf_your_token_here"
+export MODEL_NAME="meta-llama/Llama-2-7b-hf"
+```
+
+For Docker deployment, pass environment variables via `docker run -e`:
+```bash
+docker run -p 8000:8000 \
+  -e API_BASE_URL="https://api-inference.huggingface.co/v1" \
+  -e HF_TOKEN="hf_your_token_here" \
+  -e MODEL_NAME="meta-llama/Llama-2-7b-hf" \
+  devops-incident-env:1.0.0
 ```
 
 ---
