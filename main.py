@@ -147,14 +147,12 @@ def actions():
 # ─────────────────────────────────────────────────────────
 # ✅ HACKATHON REQUIRED ENDPOINTS (FINAL)
 # ─────────────────────────────────────────────────────────
-
 @app.post("/openenv/reset")
-def openenv_reset():
+def openenv_reset(body: dict = None):
     return {
         "status": "success",
         "message": "Environment reset successfully"
     }
-
 
 @app.get("/openenv/validate")
 def openenv_validate():
